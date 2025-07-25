@@ -9,21 +9,17 @@
       .channels { margin: 1rem 0; }
       .channel-label { margin-right: 1rem; }
       #preview { margin-top: 1rem; background: #f9f9f9; padding: 1rem; white-space: pre-wrap; border: 1px solid #ccc; min-height: 150px;}
-      button { padding: 0.5rem 1rem; font-size: 1rem; cursor: pointer; margin-right: 1rem; }
+      button { padding: 0.5rem 1rem; font-size: 1rem; cursor; margin-right: 1rem; }
+      .loading { color: #007bff; font-style: italic; }
+      .error { color: #dc3545; }
+      .success { color: #28a745; }
     </style>
 </head>
 <body>
     <h1>Ask Anything AI</h1>
-    <p>Type your request below and select channels to send or preview.</p>
+    <p>Type your request below and let the AI decide the best action.</p>
 
     <textarea id="messageInput" placeholder="E.g., Email john@example.com tomorrow 10AM 'Project kickoff'"></textarea>
-
-    <div class="channels">
-        <label class="channel-label"><input type="checkbox" value="email" checked> Email</label>
-        <label class="channel-label"><input type="checkbox" value="slack" checked> Slack</label>
-        <label class="channel-label"><input type="checkbox" value="telegram" checked> Telegram</label>
-        <label class="channel-label"><input type="checkbox" value="calendar" checked> Calendar</label>
-    </div>
 
     <button onclick="sendRequest()">Send</button>
     <button onclick="previewRequest()">Preview</button>
@@ -34,45 +30,49 @@
 <script>
 async function sendRequest() {
     const message = document.getElementById("messageInput").value;
-    const channels = Array.from(document.querySelectorAll("input[type=checkbox]:checked"))
-                          .map(cb => cb.value);
+    // Channels array is now empty, as checkboxes are removed
+    const channels = []; // Removed: Array.from(document.querySelectorAll("input[type=checkbox]:checked")).map(cb => cb.value);
+    const outputElement = document.getElementById("output");
 
     if (!message.trim()) {
         alert("Please enter a message.");
         return;
     }
 
-    document.getElementById("output").textContent = "Sending...";
+    outputElement.innerHTML = `<div class="loading">AI is determining action and processing request...</div>`;
     let outputText = "";
 
-    for (const channel of channels) {
-        try {
-            const response = await fetch("/ask", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: message, channels: [channel] })
-            });
-            const data = await response.json();
-            outputText += `${channel.toUpperCase()} RESPONSE:\n${JSON.stringify(data, null, 2)}\n\n`;
-        } catch (error) {
-            outputText += `${channel.toUpperCase()} ERROR: ${error.message}\n\n`;
-        }
-    }
+    try {
+        const response = await fetch("/ask", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: message, channels: channels })
+        });
+        const data = await response.json();
 
-    document.getElementById("output").textContent = outputText;
+        if (response.ok) {
+            outputText += `<span class="success">AI Workflow SUCCESS:</span>\n${JSON.stringify(data, null, 2)}\n\n`;
+        } else {
+            outputText += `<span class="error">AI Workflow ERROR:</span> ${JSON.stringify(data, null, 2)}\n\n`;
+        }
+    } catch (error) {
+        outputText += `<span class="error">NETWORK ERROR:</span> ${error.message}\n\n`;
+    }
+    outputElement.innerHTML = outputText;
 }
 
 async function previewRequest() {
     const message = document.getElementById("messageInput").value;
-    const channels = Array.from(document.querySelectorAll("input[type=checkbox]:checked"))
-                          .map(cb => cb.value);
+    // Channels array is now empty, as checkboxes are removed
+    const channels = []; // Removed: Array.from(document.querySelectorAll("input[type=checkbox]:checked")).map(cb => cb.value);
+    const outputElement = document.getElementById("output");
 
     if (!message.trim()) {
         alert("Please enter a message.");
         return;
     }
 
-    document.getElementById("output").textContent = "Loading preview...";
+    outputElement.innerHTML = `<div class="loading">AI is determining action and generating preview...</div>`;
 
     try {
         const response = await fetch("/preview", {
@@ -81,9 +81,13 @@ async function previewRequest() {
             body: JSON.stringify({ message: message, channels: channels })
         });
         const data = await response.json();
-        document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+        if (response.ok) {
+            outputElement.innerHTML = `<span class="success">PREVIEW SUCCESS (AI determined one action):</span>\n${JSON.stringify(data, null, 2)}`;
+        } else {
+            outputElement.innerHTML = `<span class="error">PREVIEW ERROR:</span> ${JSON.stringify(data, null, 2)}`;
+        }
     } catch (error) {
-        document.getElementById("output").textContent = `Preview error: ${error.message}`;
+        outputElement.innerHTML = `<span class="error">PREVIEW NETWORK ERROR:</span> ${error.message}`;
     }
 }
 </script>
