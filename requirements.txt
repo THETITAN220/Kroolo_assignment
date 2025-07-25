@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+jinja2
+python-multipart
+httpx
+python-telegram-bot[asyncio]
+slack_sdk
+dateparser
+aiohttp
