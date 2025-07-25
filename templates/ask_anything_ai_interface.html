@@ -9,12 +9,13 @@
       .channels { margin: 1rem 0; }
       .channel-label { margin-right: 1rem; }
       #preview { margin-top: 1rem; background: #f9f9f9; padding: 1rem; white-space: pre-wrap; border: 1px solid #ccc; min-height: 150px;}
-      button { padding: 0.5rem 1rem; font-size: 1rem; cursor: pointer; }
+      button { padding: 0.5rem 1rem; font-size: 1rem; cursor: pointer; margin-right: 1rem; }
     </style>
 </head>
 <body>
     <h1>Ask Anything AI</h1>
     <p>Type your request below and select channels to send or preview.</p>
+
     <textarea id="messageInput" placeholder="E.g., Email john@example.com tomorrow 10AM 'Project kickoff'"></textarea>
 
     <div class="channels">
@@ -33,49 +34,56 @@
 <script>
 async function sendRequest() {
     const message = document.getElementById("messageInput").value;
-    const channels = Array.from(document.querySelectorAll("input[type=checkbox]:checked")).map(cb => cb.value);
+    const channels = Array.from(document.querySelectorAll("input[type=checkbox]:checked"))
+                          .map(cb => cb.value);
+
     if (!message.trim()) {
         alert("Please enter a message.");
         return;
     }
+
     document.getElementById("output").textContent = "Sending...";
     let outputText = "";
 
     for (const channel of channels) {
         try {
-            const resp = await fetch("/ask", {
+            const response = await fetch("/ask", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ message: message, channels: [channel] })
             });
-            const data = await resp.json();
+            const data = await response.json();
             outputText += `${channel.toUpperCase()} RESPONSE:\n${JSON.stringify(data, null, 2)}\n\n`;
-        } catch (err) {
-            outputText += `${channel.toUpperCase()} ERROR: ${err.message}\n\n`;
+        } catch (error) {
+            outputText += `${channel.toUpperCase()} ERROR: ${error.message}\n\n`;
         }
     }
+
     document.getElementById("output").textContent = outputText;
 }
 
 async function previewRequest() {
     const message = document.getElementById("messageInput").value;
-    const channels = Array.from(document.querySelectorAll("input[type=checkbox]:checked")).map(cb => cb.value);
+    const channels = Array.from(document.querySelectorAll("input[type=checkbox]:checked"))
+                          .map(cb => cb.value);
+
     if (!message.trim()) {
         alert("Please enter a message.");
         return;
     }
+
     document.getElementById("output").textContent = "Loading preview...";
 
     try {
-        const resp = await fetch("/preview", {
+        const response = await fetch("/preview", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ message: message, channels: channels })
         });
-        const data = await resp.json();
+        const data = await response.json();
         document.getElementById("output").textContent = JSON.stringify(data, null, 2);
-    } catch (err) {
-        document.getElementById("output").textContent = `Preview error: ${err.message}`;
+    } catch (error) {
+        document.getElementById("output").textContent = `Preview error: ${error.message}`;
     }
 }
 </script>
