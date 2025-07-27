@@ -1,9 +1,9 @@
 fastapi
 uvicorn[standard]
-jinja2
-python-multipart
+pydantic
+google-genai
+slack-sdk
 httpx
-python-telegram-bot[asyncio]
-slack_sdk
+python-dotenv
 dateparser
-aiohttp
+jinja2

@@ -1,27 +1,31 @@
 import os
-import base64
-from email.mime.text import MIMEText
 import httpx
+from dotenv import load_dotenv
+
+load_dotenv()
 
 PIPEDREAM_API_KEY = os.getenv("PIPEDREAM_API_KEY")
 PIPEDREAM_GMAIL_ENDPOINT = "https://eoti9elkn97xcob.m.pipedream.net"
 
 
-async def send_email(to: str, subject: str, body: str, priority=False, **kwargs):
-    """
-    Sends email through Pipedream workflow or directly using Gmail API.
-    Here we POST data to Pipedream API that triggers email send.
-    """
+async def send_email(to, subject, body, priority=False, **kwargs):
     headers = {"Authorization": f"Bearer {PIPEDREAM_API_KEY}"}
-
-    # Construct payload
+    if isinstance(to, list):
+        to = ", ".join(to)
     payload = {"to": to, "subject": subject, "body": body, "priority": priority}
-
     async with httpx.AsyncClient() as client:
         resp = await client.post(
             PIPEDREAM_GMAIL_ENDPOINT, json=payload, headers=headers
         )
-        if resp.status_code == 200 or resp.status_code == 202:
-            return {"status": "email sent", "detail": resp.json()}
+        try:
+            resp_json = resp.json()
+        except Exception:
+            resp_json = None  # Could not parse JSON
+        if resp.status_code in (200, 202):
+            return {"status": "email sent", "detail": resp_json or resp.text}
         else:
-            return {"error": "Failed to send email", "detail": resp.text}
+            # Return more info on failure
+            return {
+                "error": f"Failed to send email, Status code: {resp.status_code}",
+                "detail": resp_json or resp.text,
+            }

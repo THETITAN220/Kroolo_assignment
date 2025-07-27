@@ -2,95 +2,21 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>Ask Anything AI - Workflow Automation</title>
-    <style>
-      body { font-family: Arial, sans-serif; margin: 2rem; max-width: 800px; }
-      textarea { width: 100%; height: 100px; font-size: 1rem; }
-      .channels { margin: 1rem 0; }
-      .channel-label { margin-right: 1rem; }
-      #preview { margin-top: 1rem; background: #f9f9f9; padding: 1rem; white-space: pre-wrap; border: 1px solid #ccc; min-height: 150px;}
-      button { padding: 0.5rem 1rem; font-size: 1rem; cursor; margin-right: 1rem; }
-      .loading { color: #007bff; font-style: italic; }
-      .error { color: #dc3545; }
-      .success { color: #28a745; }
-    </style>
+    <title>Ask Anything AI Interface</title>
+    <link rel="stylesheet" href="/static/styles.css" />
 </head>
 <body>
-    <h1>Ask Anything AI</h1>
-    <p>Type your request below and let the AI decide the best action.</p>
-
-    <textarea id="messageInput" placeholder="E.g., Email john@example.com tomorrow 10AM 'Project kickoff'"></textarea>
-
-    <button onclick="sendRequest()">Send</button>
-    <button onclick="previewRequest()">Preview</button>
-
-    <h2>Output</h2>
-    <pre id="output"></pre>
-
-<script>
-async function sendRequest() {
-    const message = document.getElementById("messageInput").value;
-    // Channels array is now empty, as checkboxes are removed
-    const channels = []; // Removed: Array.from(document.querySelectorAll("input[type=checkbox]:checked")).map(cb => cb.value);
-    const outputElement = document.getElementById("output");
-
-    if (!message.trim()) {
-        alert("Please enter a message.");
-        return;
-    }
-
-    outputElement.innerHTML = `<div class="loading">AI is determining action and processing request...</div>`;
-    let outputText = "";
-
-    try {
-        const response = await fetch("/ask", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message: message, channels: channels })
-        });
-        const data = await response.json();
-
-        if (response.ok) {
-            outputText += `<span class="success">AI Workflow SUCCESS:</span>\n${JSON.stringify(data, null, 2)}\n\n`;
-        } else {
-            outputText += `<span class="error">AI Workflow ERROR:</span> ${JSON.stringify(data, null, 2)}\n\n`;
-        }
-    } catch (error) {
-        outputText += `<span class="error">NETWORK ERROR:</span> ${error.message}\n\n`;
-    }
-    outputElement.innerHTML = outputText;
-}
-
-async function previewRequest() {
-    const message = document.getElementById("messageInput").value;
-    // Channels array is now empty, as checkboxes are removed
-    const channels = []; // Removed: Array.from(document.querySelectorAll("input[type=checkbox]:checked")).map(cb => cb.value);
-    const outputElement = document.getElementById("output");
-
-    if (!message.trim()) {
-        alert("Please enter a message.");
-        return;
-    }
-
-    outputElement.innerHTML = `<div class="loading">AI is determining action and generating preview...</div>`;
-
-    try {
-        const response = await fetch("/preview", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message: message, channels: channels })
-        });
-        const data = await response.json();
-        if (response.ok) {
-            outputElement.innerHTML = `<span class="success">PREVIEW SUCCESS (AI determined one action):</span>\n${JSON.stringify(data, null, 2)}`;
-        } else {
-            outputElement.innerHTML = `<span class="error">PREVIEW ERROR:</span> ${JSON.stringify(data, null, 2)}`;
-        }
-    } catch (error) {
-        outputElement.innerHTML = `<span class="error">PREVIEW NETWORK ERROR:</span> ${error.message}`;
-    }
-}
-</script>
-
+   <div class="container">
+     <h1>Ask Anything AI</h1>
+      <form id="ask_form">
+        <textarea id="user_message" required placeholder="Type your request..."></textarea>
+        <div style="display: flex; gap: 12px; margin-top: 10px;">
+          <button type="button" id="preview_btn">Preview</button>
+          <button type="button" id="send_btn">Send</button>
+        </div>
+      </form>
+      <div id="result"></div>
+   </div>
+   <script src="/static/script.js"></script>
 </body>
 </html>
